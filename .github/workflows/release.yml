@@ -174,9 +174,9 @@ jobs:
             os: ubuntu-22.04
           - build: 'arm64'
             os: ubuntu-24.04-arm
-        exclude:
-          - build: 's390x'
-            os: ubuntu-24.04-s390x
+          - exclude:
+            - build: 's390x'
+              os: ubuntu-24.04-s390x
 
     runs-on: ${{ matrix.os }}
 
