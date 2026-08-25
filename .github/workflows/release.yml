@@ -127,9 +127,12 @@ jobs:
           cache-dependency-path: "tools/ui/package-lock.json"
 
       - name: ccache
-        uses: ggml-org/ccache-action@v1.2.21
+        uses: hendrikmuhs/ccache-action@v1.2
         with:
-          key: release-${{ matrix.os }}-${{ matrix.arch }}
+          key: release-${{ matrix.os }}-${{ matrix.arch }}-${{ github.sha }}
+          restore-keys: |
+            release-${{ matrix.os }}-${{ matrix.arch }}-
+            release-${{ matrix.os }}-
 
       - name: Build
         id: cmake_build
@@ -161,11 +164,6 @@ jobs:
           path: llama-${{ steps.tag.outputs.name }}-bin-macos-${{ matrix.build }}.tar.gz
           name: llama-bin-macos-${{ matrix.build }}.tar.gz
 
-      - name: ccache-clear
-        uses: ./.github/actions/ccache-clear
-        with:
-          key: release-${{ matrix.os }}-${{ matrix.arch }}
-
   ubuntu-cpu:
     needs: [check-release, get-version]
     if: ${{ needs.check-release.outputs.should_release == 'true' }}
@@ -176,6 +174,7 @@ jobs:
             os: ubuntu-22.04
           - build: 'arm64'
             os: ubuntu-24.04-arm
+        exclude:
           - build: 's390x'
             os: ubuntu-24.04-s390x
 
@@ -213,9 +212,11 @@ jobs:
 
       - name: ccache
         if: ${{ matrix.build != 's390x' }}
-        uses: ggml-org/ccache-action@v1.2.21
+        uses: hendrikmuhs/ccache-action@v1.2
         with:
-          key: release-${{ matrix.os }}-cpu
+          key: release-${{ matrix.os }}-cpu-${{ github.sha }}
+          restore-keys: |
+            release-${{ matrix.os }}-cpu-
 
       - name: Build
         id: cmake_build
@@ -247,11 +248,6 @@ jobs:
           path: llama-${{ steps.tag.outputs.name }}-bin-ubuntu-${{ matrix.build }}.tar.gz
           name: llama-bin-ubuntu-${{ matrix.build }}.tar.gz
 
-      - name: ccache-clear
-        if: ${{ matrix.build != 's390x' }}
-        uses: ./.github/actions/ccache-clear
-        with:
-          key: release-${{ matrix.os }}-cpu
 
   ubuntu-vulkan:
     needs: [check-release, get-version]
@@ -300,9 +296,11 @@ jobs:
           fi
 
       - name: ccache
-        uses: ggml-org/ccache-action@v1.2.21
+        uses: hendrikmuhs/ccache-action@v1.2
         with:
-          key: release-${{ matrix.os }}-vulkan
+          key: release-${{ matrix.os }}-vulkan-${{ github.sha }}
+          restore-keys: |
+            release-${{ matrix.os }}-vulkan-
 
       - name: Build
         id: cmake_build
@@ -333,11 +331,6 @@ jobs:
         with:
           path: llama-${{ steps.tag.outputs.name }}-bin-ubuntu-vulkan-${{ matrix.build }}.tar.gz
           name: llama-bin-ubuntu-vulkan-${{ matrix.build }}.tar.gz
-
-      - name: ccache-clear
-        uses: ./.github/actions/ccache-clear
-        with:
-          key: release-${{ matrix.os }}-vulkan
 
   android-arm64:
     needs: [check-release, get-version]
@@ -468,9 +461,11 @@ jobs:
           cache-dependency-path: "tools/ui/package-lock.json"
 
       - name: ccache
-        uses: ggml-org/ccache-action@v1.2.21
+        uses: hendrikmuhs/ccache-action@v1.2
         with:
-          key: release-ubuntu-24.04-openvino-release-no-preset-v1
+          key: release-ubuntu-24.04-openvino-release-no-preset-v1-${{ github.sha }}
+          restore-keys: |
+            release-ubuntu-24.04.openvino-release-no-preset-v1-
 
       - name: Dependencies
         run: |
@@ -546,11 +541,6 @@ jobs:
           path: llama-${{ steps.tag.outputs.name }}-bin-ubuntu-openvino-${{ env.OPENVINO_VERSION_MAJOR }}-x64.tar.gz
           name: llama-bin-ubuntu-openvino-${{ env.OPENVINO_VERSION_MAJOR }}-x64.tar.gz
 
-      - name: ccache-clear
-        uses: ./.github/actions/ccache-clear
-        with:
-          key: release-ubuntu-24.04-openvino-release-no-preset-v1
-
   windows-openvino:
     needs: [check-release]
     if: ${{ needs.check-release.outputs.should_release == 'true' }}
@@ -568,8 +558,8 @@ jobs:
     steps:
       - name: Set OpenVINO version output
         id: openvino_version
-        shell: bash
-        run: echo "value=${{ env.OPENVINO_VERSION_MAJOR }}" >> $GITHUB_OUTPUT
+        shell: cmd
+        run: echo "value=${{ env.OPENVINO_VERSION_MAJOR }}" >> %GITHUB_OUTPUT%
 
       - name: Clone
         id: checkout
@@ -585,11 +575,12 @@ jobs:
           cache-dependency-path: "tools/ui/package-lock.json"
 
       - name: ccache
-        uses: ggml-org/ccache-action@v1.2.21
+        uses: hendrikmuhs/ccache-action@v1.2
         with:
-          key: release-windows-2022-openvino
+          key: release-windows-2022-openvino-${{ github.sha }}
           variant: ccache
-          evict-old-files: 1d
+          restore-keys: |
+            release-windows-2022-openvino-
 
       - name: Setup Cache
         uses: actions/cache@v5
@@ -675,11 +666,6 @@ jobs:
           path: llama-${{ steps.tag.outputs.name }}-bin-win-openvino-${{ env.OPENVINO_VERSION_MAJOR }}-x64.zip
           name: llama-bin-win-openvino-${{ env.OPENVINO_VERSION_MAJOR }}-x64.zip
 
-      - name: ccache-clear
-        uses: ./.github/actions/ccache-clear
-        with:
-          key: release-windows-2022-openvino
-
   windows-cpu:
     name: windows-cpu / ${{ matrix.arch }}
     needs: [check-release]
@@ -714,9 +700,12 @@ jobs:
           choco install ninja
 
       - name: ccache
-        uses: ggml-org/ccache-action@v1.2.21
+        uses: hendrikmuhs/ccache-action@v1.2
         with:
-          key: release-windows-2025-vs2026-${{ matrix.arch }}-cpu
+          key: release-windows-2025-vs2026-${{ matrix.arch }}-cpu-${{ github.sha }}
+          restore-keys: |
+            release-windows-2025-vs2026-${{ matrix.arch }}-cpu-
+            release-windows-2025-vs2026-${{ matrix.arch }}-
 
       - name: Build
         shell: cmd
@@ -736,18 +725,13 @@ jobs:
       - name: Pack artifacts
         id: pack_artifacts
         run: |
-          7z a -snl llama-bin-win-cpu-${{ matrix.arch }}.zip .\build\bin\Release\*
+          7z a -tzip -snl -mx7 llama-bin-win-cpu-${{ matrix.arch }}.zip .\build\bin\Release\*
 
       - name: Upload artifacts
         uses: actions/upload-artifact@v6
         with:
           path: llama-bin-win-cpu-${{ matrix.arch }}.zip
           name: llama-bin-win-cpu-${{ matrix.arch }}.zip
-
-      - name: ccache-clear
-        uses: ./.github/actions/ccache-clear
-        with:
-          key: release-windows-2025-vs2026-${{ matrix.arch }}-cpu
 
   windows-rocm:
     needs: [check-release]
@@ -770,10 +754,13 @@ jobs:
           fetch-depth: 0
 
       - name: ccache
-        uses: ggml-org/ccache-action@v1.2.21
+        uses: hendrikmuhs/ccache-action@v1.2
         with:
-          key: windows-rocm-${{ matrix.ROCM_VERSION }}-${{ matrix.build }}
-          evict-old-files: 1d
+          key: windows-rocm-${{ matrix.ROCM_VERSION }}-${{ matrix.build }}-${{ github.sha }}
+          restore-keys: |
+            windows-rocm-${{ matrix.ROCM_VERSION }}-${{ matrix.build }}-
+            windows-rocm-${{ matrix.ROCM_VERSION }}-
+            windows-rocm-
           max-size: "1G"
 
       # - name: Cache ROCm Installation
@@ -866,18 +853,13 @@ jobs:
       - name: Pack artifacts
         run: |
           cp "LICENSE" "build\bin\"
-          7z a -snl llama-bin-win-rocm-${{ env.ROCM_VERSION_SHORT }}-${{ matrix.build }}.zip .\build\bin\*
+          7z a -tzip -snl -mx7 llama-bin-win-rocm-${{ env.ROCM_VERSION_SHORT }}-${{ matrix.build }}.zip .\build\bin\*
 
       - name: Upload artifacts
         uses: actions/upload-artifact@v6
         with:
           path: llama-bin-win-rocm-${{ env.ROCM_VERSION_SHORT }}-${{ matrix.build }}.zip
           name: llama-bin-win-rocm-${{ env.ROCM_VERSION_SHORT }}-${{ matrix.build }}.zip
-
-      - name: ccache-clear
-        uses: ./.github/actions/ccache-clear
-        with:
-          key: windows-rocm-${{ matrix.ROCM_VERSION }}-${{ matrix.build }}
 
   windows:
     needs: [check-release]
@@ -970,7 +952,7 @@ jobs:
       - name: Pack artifacts
         id: pack_artifacts
         run: |
-          7z a -snl llama-bin-win-${{ matrix.backend }}-${{ matrix.arch }}.zip .\build\bin\Release\${{ matrix.target }}.dll
+          7z a -tzip -snl -mx7 llama-bin-win-${{ matrix.backend }}-${{ matrix.arch }}.zip .\build\bin\Release\${{ matrix.target }}.dll
 
       - name: Upload artifacts
         uses: actions/upload-artifact@v6
@@ -1025,9 +1007,13 @@ jobs:
           choco install ninja
 
       - name: ccache
-        uses: ggml-org/ccache-action@v1.2.21
+        uses: hendrikmuhs/ccache-action@v1.2
         with:
-          key: release-windows-2022-${{ matrix.arch }}-cuda-${{ matrix.cuda }}
+          key: release-windows-2022-${{ matrix.arch }}-cuda-${{ matrix.cuda }}-${{ github.sha }}
+          restore-keys: |
+            release-windows-2022-${{ matrix.arch }}-cuda-${{ matrix.cuda }}-
+            release-windows-2022-${{ matrix.arch }}-cuda-
+            release-windows-2022-${{ matrix.arch }}-
 
       - name: Build
         id: cmake_build
@@ -1047,7 +1033,7 @@ jobs:
       - name: Pack artifacts
         id: pack_artifacts
         run: |
-          7z a -snl llama-bin-win-cuda-${{ matrix.cuda }}-${{ matrix.arch }}.zip .\build\bin\Release\ggml-cuda.dll
+          7z a -tzip -snl -mx7 llama-bin-win-cuda-${{ matrix.cuda }}-${{ matrix.arch }}.zip .\build\bin\Release\ggml-cuda.dll
 
       - name: Upload artifacts
         uses: actions/upload-artifact@v6
@@ -1063,7 +1049,7 @@ jobs:
           robocopy "${{env.CUDA_PATH}}\bin" $dst cudart64_*.dll cublas64_*.dll cublasLt64_*.dll
           robocopy "${{env.CUDA_PATH}}\lib" $dst cudart64_*.dll cublas64_*.dll cublasLt64_*.dll
           robocopy "${{env.CUDA_PATH}}\bin\x64" $dst cudart64_*.dll cublas64_*.dll cublasLt64_*.dll
-          7z a cudart-llama-bin-win-cuda-${{ matrix.cuda }}-${{ matrix.arch }}.zip $dst\*
+          7z a -tzip -snl -mx7 cudart-llama-bin-win-cuda-${{ matrix.cuda }}-${{ matrix.arch }}.zip $dst\*
 
       - name: Copy and pack Cuda runtime (ARM64)
         if: ${{ matrix.arch == 'arm64' }}
@@ -1071,18 +1057,13 @@ jobs:
           echo "Cuda install location: ${{ env.CUDA_PATH }}"
           $dst='.\build\bin\cudart\'
           robocopy "${{env.CUDA_PATH}}\bin\arm64" $dst cudart64_*.dll cublas64_*.dll cublasLt64_*.dll
-          7z a cudart-llama-bin-win-cuda-${{ matrix.cuda }}-${{ matrix.arch }}.zip $dst\*
+          7z a -tzip -snl -mx7 cudart-llama-bin-win-cuda-${{ matrix.cuda }}-${{ matrix.arch }}.zip $dst\*
 
       - name: Upload Cuda runtime
         uses: actions/upload-artifact@v6
         with:
           path: cudart-llama-bin-win-cuda-${{ matrix.cuda }}-${{ matrix.arch }}.zip
           name: cudart-llama-bin-win-cuda-${{ matrix.cuda }}-${{ matrix.arch }}.zip
-
-      - name: ccache-clear
-        uses: ./.github/actions/ccache-clear
-        with:
-          key: release-windows-2022-${{ matrix.arch }}-cuda-${{ matrix.cuda }}
 
   windows-sycl:
     needs: [check-release]
@@ -1126,9 +1107,11 @@ jobs:
           cache-dependency-path: "tools/ui/package-lock.json"
 
       - name: ccache
-        uses: ggml-org/ccache-action@v1.2.21
+        uses: hendrikmuhs/ccache-action@v1.2
         with:
-          key: release-windows-2022-x64-sycl
+          key: release-windows-2022-x64-sycl-${{ github.sha }}
+          restore-keys: |
+            release-windows-2022-x64-sycl-
 
       - name: Build
         id: cmake_build
@@ -1181,18 +1164,13 @@ jobs:
           cp "${{ env.ONEAPI_ROOT }}/umf/latest/bin/umf.dll" ./build/bin
 
           echo "cp oneAPI running time dll files to ./build/bin done"
-          7z a -snl llama-bin-win-sycl-x64.zip ./build/bin/*
+          7z a -tzip -snl -mx7 llama-bin-win-sycl-x64.zip ./build/bin/*
 
       - name: Upload the release package
         uses: actions/upload-artifact@v6
         with:
           path: llama-bin-win-sycl-x64.zip
           name: llama-bin-win-sycl-x64.zip
-
-      - name: ccache-clear
-        uses: ./.github/actions/ccache-clear
-        with:
-          key: release-windows-2022-x64-sycl
 
   ubuntu-24-sycl:
     needs: [check-release]
@@ -1245,9 +1223,12 @@ jobs:
           cache-dependency-path: "tools/ui/package-lock.json"
 
       - name: ccache
-        uses: ggml-org/ccache-action@v1.2.21
+        uses: hendrikmuhs/ccache-action@v1.2
         with:
-          key: release-ubuntu-24.04-sycl-${{ matrix.build }}
+          key: release-ubuntu-24.04-sycl-${{ matrix.build }}-${{ github.sha }}
+          restore-keys: |
+            release-ubuntu-24.04-sycl-${{ matrix.build }}-
+            release-ubuntu-24.04-sycl-
 
       - name: Build
         id: cmake_build
@@ -1281,11 +1262,6 @@ jobs:
         with:
           path: llama-${{ steps.tag.outputs.name }}-bin-ubuntu-sycl-${{ matrix.build }}-x64.tar.gz
           name: llama-bin-ubuntu-sycl-${{ matrix.build }}-x64.tar.gz
-
-      - name: ccache-clear
-        uses: ./.github/actions/ccache-clear
-        with:
-          key: release-ubuntu-24.04-sycl-${{ matrix.build }}
 
   ubuntu-22-rocm:
     needs: [check-release, get-version]
@@ -1323,10 +1299,12 @@ jobs:
           tool-cache: true
 
       - name: ccache
-        uses: ggml-org/ccache-action@v1.2.21
+        uses: hendrikmuhs/ccache-action@v1.2
         with:
-          key: release-ubuntu-rocm-${{ matrix.ROCM_VERSION }}-${{ matrix.build }}
-          evict-old-files: 1d
+          key: release-ubuntu-rocm-${{ matrix.ROCM_VERSION }}-${{ matrix.build }}-${{ github.sha }}
+          restore-keys: |
+            release-ubuntu-rocm-${{ matrix.ROCM_VERSION }}-${{ matrix.build }}-
+            release-ubuntu-rocm-${{ matrix.ROCM_VERSION }}-
           max-size: "1G"
 
       - name: Tune ccache for reinstalled ROCm toolchain
@@ -1410,11 +1388,6 @@ jobs:
         with:
           path: llama-${{ steps.tag.outputs.name }}-bin-ubuntu-rocm-${{ env.ROCM_VERSION_SHORT }}-${{ matrix.build }}.tar.gz
           name: llama-bin-ubuntu-rocm-${{ env.ROCM_VERSION_SHORT }}-${{ matrix.build }}.tar.gz
-
-      - name: ccache-clear
-        uses: ./.github/actions/ccache-clear
-        with:
-          key: release-ubuntu-rocm-${{ matrix.ROCM_VERSION }}-${{ matrix.build }}
 
   ios-xcode:
     needs: [check-release, get-version]
@@ -1723,7 +1696,7 @@ jobs:
             **Linux:**
             - [Ubuntu x64 (CPU)](https://github.com/${{ github.repository }}/releases/download/${{ steps.tag.outputs.name }}/llama-${{ steps.tag.outputs.name }}-bin-ubuntu-x64.tar.gz)
             - [Ubuntu arm64 (CPU)](https://github.com/${{ github.repository }}/releases/download/${{ steps.tag.outputs.name }}/llama-${{ steps.tag.outputs.name }}-bin-ubuntu-arm64.tar.gz)
-            - [Ubuntu s390x (CPU)](https://github.com/${{ github.repository }}/releases/download/${{ steps.tag.outputs.name }}/llama-${{ steps.tag.outputs.name }}-bin-ubuntu-s390x.tar.gz)
+            - Ubuntu s390x (CPU) DISABLED
             - [Ubuntu x64 (Vulkan)](https://github.com/${{ github.repository }}/releases/download/${{ steps.tag.outputs.name }}/llama-${{ steps.tag.outputs.name }}-bin-ubuntu-vulkan-x64.tar.gz)
             - [Ubuntu arm64 (Vulkan)](https://github.com/${{ github.repository }}/releases/download/${{ steps.tag.outputs.name }}/llama-${{ steps.tag.outputs.name }}-bin-ubuntu-vulkan-arm64.tar.gz)
             - [Ubuntu x64 (ROCm 7.14)](https://github.com/${{ github.repository }}/releases/download/${{ steps.tag.outputs.name }}/llama-${{ steps.tag.outputs.name }}-bin-ubuntu-rocm-7.14-x64.tar.gz)
